@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Eventos</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #e9ecef; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #0077b6; margin-top: 0; }
+        .tab-bar { display: flex; gap: 5px; border-bottom: 1px solid #ccc; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; cursor: pointer; border-radius: 8px 8px 0 0; background: #f1f3f5; transition: 0.2s; }
+        .tab.active { background: #0077b6; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        input, button { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+        button { background: #0077b6; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #023e8a; }
+        .message { padding: 10px; margin: 10px 0; border-radius: 6px; font-size: 14px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .event-item { border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; margin-bottom: 12px; background: #f8f9fa; }
+        .event-title { font-weight: bold; font-size: 1.1em; }
+        .delete-btn { background: #dc3545; width: auto; padding: 5px 12px; margin-top: 8px; display: inline-block; }
+        .delete-btn:hover { background: #a71d2a; }
+        .token-info { background: #e2e3e5; padding: 8px; font-size: 12px; word-break: break-all; border-radius: 6px; margin: 10px 0; }
+        hr { margin: 20px 0; }
+        small { color: #6c757d; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>📅 Gestão de Eventos</h2>
+    <div class="tab-bar">
+        <div class="tab active" data-tab="login">🔐 Login</div>
+        <div class="tab" data-tab="register">📝 Cadastrar</div>
+        <div class="tab" data-tab="events">🎉 Eventos</div>
+    </div>
+
+    <!-- Aba Login -->
+    <div id="login" class="tab-content active">
+        <h3>Login</h3>
+        <input type="email" id="loginEmail" placeholder="Seu e-mail" autocomplete="email">
+        <input type="password" id="loginPassword" placeholder="Sua senha" autocomplete="current-password">
+        <button id="btnLogin">Entrar</button>
+        <div id="loginMessage" class="message"></div>
+    </div>
+
+    <!-- Aba Cadastro -->
+    <div id="register" class="tab-content">
+        <h3>Criar Conta</h3>
+        <input type="text" id="regName" placeholder="Nome completo">
+        <input type="email" id="regEmail" placeholder="E-mail">
+        <input type="password" id="regPassword" placeholder="Senha (mínimo 6 caracteres)">
+        <button id="btnRegister">Cadastrar</button>
+        <div id="regMessage" class="message"></div>
+    </div>
+
+    <!-- Aba Eventos -->
+    <div id="events" class="tab-content">
+        <h3>Meus Eventos</h3>
+        <div id="tokenStatus" class="token-info">🔑 Nenhum token encontrado. Faça login primeiro.</div>
+        <div style="background:#f1f3f5; padding:15px; border-radius:8px; margin-bottom:20px;">
+            <h4>➕ Criar novo evento</h4>
+            <input type="text" id="evTitle" placeholder="Título*">
+            <input type="text" id="evDescription" placeholder="Descrição*">
+            <input type="datetime-local" id="evDate">
+            <input type="text" id="evLocation" placeholder="Local*">
+            <button id="btnCreateEvent">Criar Evento</button>
+        </div>
+        <hr>
+        <h4>📋 Lista de eventos</h4>
+        <div id="eventsList">Carregando...</div>
+    </div>
+</div>
+
+<script>
+    // ==================== CONFIGURAÇÃO ====================
+    const API_BASE = '';  // relativo à mesma origem
+    let token = localStorage.getItem('token') || '';
+
+    // Elementos DOM
+    const loginTab = document.getElementById('login');
+    const registerTab = document.getElementById('register');
+    const eventsTab = document.getElementById('events');
+
+    // Abas
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabId = tab.getAttribute('data-tab');
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if (tabId === 'events' && token) loadEvents();
+        });
+    });
+
+    // Função auxiliar para requisições fetch
+    async function apiRequest(endpoint, method, body = null, useAuth = false) {
+        const headers = { 'Content-Type': 'application/json' };
+        if (useAuth && token) headers['Authorization'] = `Bearer ${token}`;
+        const options = {
+            method,
+            headers,
+            body: body ? JSON.stringify(body) : undefined
+        };
+        const response = await fetch(`${API_BASE}${endpoint}`, options);
+        let data;
+        try {
+            data = await response.json();
+        } catch (e) {
+            data = { message: 'Resposta inválida do servidor' };
+        }
+        if (!response.ok) {
+            throw new Error(data.message || `Erro ${response.status}`);
+        }
+        return data;
+    }
+
+    // ==================== CADASTRO ====================
+    document.getElementById('btnRegister').addEventListener('click', async () => {
+        const name = document.getElementById('regName').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const msgDiv = document.getElementById('regMessage');
+        if (!name || !email || !password) {
+            msgDiv.innerHTML = '❌ Preencha todos os campos.';
+            msgDiv.className = 'message error';
+            return;
+        }
+        if (password.length < 6) {
+            msgDiv.innerHTML = '❌ A senha deve ter pelo menos 6 caracteres.';
+            msgDiv.className = 'message error';
+            return;
+        }
+        try {
+            const result = await apiRequest('/api/auth/register', 'POST', { name, email, password });
+            msgDiv.innerHTML = `✅ Conta criada com sucesso! Agora faça login.`;
+            msgDiv.className = 'message success';
+            // Limpar campos
+            document.getElementById('regName').value = '';
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regPassword').value = '';
+            // Mudar para aba login após 1.5s
+            setTimeout(() => {
+                document.querySelector('.tab[data-tab="login"]').click();
+            }, 1500);
+        } catch (err) {
+            msgDiv.innerHTML = `❌ ${err.message}`;
+            msgDiv.className = 'message error';
+        }
+    });
+
+    // ==================== LOGIN ====================
+    document.getElementById('btnLogin').addEventListener('click', async () => {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const msgDiv = document.getElementById('loginMessage');
+        if (!email || !password) {
+            msgDiv.innerHTML = '❌ Informe e-mail e senha.';
+            msgDiv.className = 'message error';
+            return;
+        }
+        try {
+            const data = await apiRequest('/api/auth/login', 'POST', { email, password });
+            token = data.token;
+            localStorage.setItem('token', token);
+            msgDiv.innerHTML = '✅ Login realizado com sucesso! Redirecionando...';
+            msgDiv.className = 'message success';
+            // Atualizar status do token
+            document.getElementById('tokenStatus').innerHTML = `🔑 Token salvo: ${token.substring(0,30)}...`;
+            setTimeout(() => {
+                // Ir para aba eventos e carregar
+                document.querySelector('.tab[data-tab="events"]').click();
+            }, 1000);
+        } catch (err) {
+            msgDiv.innerHTML = `❌ Falha no login: ${err.message}`;
+            msgDiv.className = 'message error';
+        }
+    });
+
+    // ==================== EVENTOS ====================
+    async function loadEvents() {
+        if (!token) {
+            document.getElementById('eventsList').innerHTML = '<p>⚠️ Você não está logado. Faça login primeiro.</p>';
+            return;
+        }
+        try {
+            const data = await apiRequest('/api/events', 'GET', null, true);
+            const events = data.data || data;  // pode vir dentro de .data ou direto
+            const container = document.getElementById('eventsList');
+            if (!events.length) {
+                container.innerHTML = '<p>📭 Nenhum evento cadastrado. Crie um usando o formulário acima.</p>';
+                return;
+            }
+            container.innerHTML = events.map(ev => `
+                <div class="event-item">
+                    <div class="event-title">🎯 ${escapeHtml(ev.title)}</div>
+                    <div><strong>Descrição:</strong> ${escapeHtml(ev.description)}</div>
+                    <div><strong>Data:</strong> ${new Date(ev.date).toLocaleString()}</div>
+                    <div><strong>Local:</strong> ${escapeHtml(ev.location)}</div>
+                    <button class="delete-btn" data-id="${ev._id}">🗑️ Excluir</button>
+                </div>
+            `).join('');
+            // Adicionar evento de clique para cada botão excluir
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = btn.getAttribute('data-id');
+                    if (confirm('Remover este evento permanentemente?')) {
+                        try {
+                            await apiRequest(`/api/events/${id}`, 'DELETE', null, true);
+                            loadEvents(); // recarregar lista
+                        } catch (err) {
+                            alert('Erro ao excluir: ' + err.message);
+                        }
+                    }
+                });
+            });
+        } catch (err) {
+            document.getElementById('eventsList').innerHTML = `<p class="error">❌ Erro ao carregar eventos: ${err.message}. Verifique se o servidor está rodando.</p>`;
+        }
+    }
+
+    document.getElementById('btnCreateEvent').addEventListener('click', async () => {
+        if (!token) {
+            alert('Você precisa estar logado para criar eventos.');
+            return;
+        }
+        const title = document.getElementById('evTitle').value.trim();
+        const description = document.getElementById('evDescription').value.trim();
+        const date = document.getElementById('evDate').value;
+        const location = document.getElementById('evLocation').value.trim();
+        if (!title || !description || !location || !date) {
+            alert('Preencha todos os campos (título, descrição, data e local).');
+            return;
+        }
+        // Formatar data para ISO
+        const isoDate = new Date(date).toISOString();
+        try {
+            await apiRequest('/api/events', 'POST', { title, description, date: isoDate, location }, true);
+            alert('Evento criado com sucesso!');
+            // Limpar campos
+            document.getElementById('evTitle').value = '';
+            document.getElementById('evDescription').value = '';
+            document.getElementById('evDate').value = '';
+            document.getElementById('evLocation').value = '';
+            loadEvents();
+        } catch (err) {
+            alert('Erro ao criar evento: ' + err.message);
+        }
+    });
+
+    // Função auxiliar para evitar XSS
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // Ao iniciar, se já houver token, mostrar status
+    if (token) {
+        document.getElementById('tokenStatus').innerHTML = `🔑 Token ativo: ${token.substring(0,30)}...`;
+    } else {
+        document.getElementById('tokenStatus').innerHTML = '🔑 Nenhum token encontrado. Faça login.';
+    }
+</script>
+</body>
+</html>
