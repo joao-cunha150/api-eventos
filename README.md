@@ -1,4 +1,4 @@
-#  Sistema de Gestão de Eventos
+# Sistema de Gestão de Eventos
 
 Este projeto foi desenvolvido com o objetivo de criar uma aplicação completa de gerenciamento de eventos utilizando Node.js, Express e MongoDB.  
 O sistema permite que usuários realizem cadastro, login autenticado e gerenciamento de eventos pessoais.
