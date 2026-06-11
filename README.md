@@ -1,50 +1,66 @@
 # Sistema de Gestão de Eventos
 
-Este projeto foi desenvolvido com o objetivo de criar uma aplicação completa de gerenciamento de eventos utilizando Node.js, Express e MongoDB.  
-O sistema permite que usuários realizem cadastro, login autenticado e gerenciamento de eventos pessoais.
+Este projeto consiste em uma API REST desenvolvida com Node.js, Express e MongoDB para gerenciamento de eventos. O sistema permite cadastro e autenticação de usuários, além do gerenciamento completo de eventos por meio de operações CRUD protegidas por JWT.
+
+A aplicação também possui documentação interativa utilizando Swagger/OpenAPI, permitindo testar os endpoints diretamente pelo navegador.
 
 ---
 
-#  Objetivo do Projeto
+# Objetivo do Projeto
 
-O principal objetivo deste trabalho foi aplicar conceitos de desenvolvimento back-end utilizando:
+O objetivo deste projeto foi aplicar conceitos de desenvolvimento back-end, segurança e documentação de APIs, utilizando:
 
-- Criação de API REST
-- Autenticação com JWT
-- Integração com banco de dados MongoDB
-- Estruturação de projeto em camadas
-- Operações CRUD
-- Organização de rotas, controllers e models
-
-Além disso, foi criada uma interface web simples para interação com a API.
+* Desenvolvimento de API REST
+* Autenticação e autorização com JWT
+* Integração com MongoDB
+* Estruturação em camadas (Controllers, Models, Routes e Middlewares)
+* Operações CRUD
+* Documentação de API com Swagger/OpenAPI
 
 ---
 
-#  Tecnologias Utilizadas
+# Tecnologias Utilizadas
 
-O projeto foi desenvolvido utilizando as seguintes tecnologias:
-
-- Node.js
-- Express
-- MongoDB
-- Mongoose
-- JWT (jsonwebtoken)
-- bcryptjs
-- HTML
-- CSS
-- JavaScript
-- dotenv
-- cors
+* Node.js
+* Express
+* MongoDB
+* Mongoose
+* JSON Web Token (JWT)
+* bcryptjs
+* Swagger UI Express
+* Swagger JSDoc
+* HTML
+* CSS
+* JavaScript
+* dotenv
+* cors
 
 ---
 
-#  Estrutura do Projeto
+# Funcionalidades
+
+* Cadastro de usuários
+* Login autenticado
+* Criptografia de senhas
+* Geração de Token JWT
+* Criação de eventos
+* Listagem de eventos
+* Atualização de eventos
+* Exclusão de eventos
+* Rotas protegidas
+* Interface web integrada
+* Documentação Swagger/OpenAPI
+
+---
+
+# Estrutura do Projeto
 
 ```bash
 api-eventos/
 │
 ├── config/
-│   └── db.js
+│   ├── db.js
+│   └── swagger.js
 │
 ├── public/
 │   └── index.html
@@ -65,121 +81,28 @@ api-eventos/
 │       ├── authRoutes.js
 │       └── eventRoutes.js
 │
-├── .env.example
+├── .env
 ├── .gitignore
 ├── package.json
+├── package-lock.json
 ├── server.js
 └── README.md
 ```
 
 ---
 
-#  Explicação da Estrutura
+# Sistema de Autenticação
 
-##  config/
-
-Contém a configuração de conexão com o MongoDB.
-
-### db.js
-Responsável por conectar o sistema ao banco de dados utilizando Mongoose.
-
----
-
-##  public/
-
-Contém o front-end do projeto.
-
-### index.html
-Arquivo responsável pela interface do sistema:
-- login
-- cadastro
-- criação de eventos
-- listagem de eventos
-
-Também contém JavaScript responsável pelas requisições para a API.
-
----
-
-##  src/controllers/
-
-Os controllers concentram a lógica do sistema.
-
-### authController.js
-Responsável por:
-- cadastrar usuários
-- realizar login
-- gerar token JWT
-
-### eventController.js
-Responsável pelas operações CRUD:
-- criar evento
-- listar eventos
-- atualizar evento
-- excluir evento
-
----
-
-##  src/models/
-
-Responsável pela modelagem do banco de dados.
-
-### User.js
-Modelo de usuário contendo:
-- nome
-- email
-- senha criptografada
-
-Também possui:
-- hash de senha com bcryptjs
-- método comparePassword
-
-### Event.js
-Modelo responsável pelos eventos cadastrados pelos usuários.
-
----
-
-##  src/routes/
-
-Define as rotas da API.
-
-### authRoutes.js
-Rotas:
-- `/api/auth/register`
-- `/api/auth/login`
-
-### eventRoutes.js
-Rotas protegidas:
-- criar eventos
-- listar eventos
-- atualizar eventos
-- excluir eventos
-
----
-
-##  src/middlewares/
-
-### authMiddleware.js
-
-Middleware responsável pela autenticação JWT.
-
-Funções:
-- verificar token
-- validar usuário logado
-- proteger rotas privadas
-
----
-
-#  Sistema de Autenticação
-
-A autenticação foi implementada utilizando JWT.
+A autenticação é realizada através de JWT.
 
 Fluxo:
-1. usuário realiza login
-2. sistema gera um token
-3. token é armazenado no navegador
-4. token é enviado nas rotas protegidas
 
-Header utilizado:
+1. Usuário realiza login.
+2. O sistema gera um token JWT.
+3. O token é armazenado no cliente.
+4. O token é enviado no cabeçalho das requisições protegidas.
+
+Exemplo:
 
 ```bash
 Authorization: Bearer TOKEN
@@ -187,63 +110,46 @@ Authorization: Bearer TOKEN
 
 ---
 
-#  Banco de Dados
+# Banco de Dados
 
-O banco utilizado foi MongoDB.
+Banco utilizado:
 
-Coleções utilizadas:
-- users
-- events
+* MongoDB
+
+Coleções:
+
+* users
+* events
 
 Relacionamento:
-- cada evento pertence a um usuário
+
+* Cada evento pertence a um usuário autenticado.
 
 ---
 
-#  Funcionalidades Implementadas
+# Como Executar o Projeto
 
- Cadastro de usuários  
- Login autenticado  
- Criptografia de senha  
- Criação de eventos  
- Listagem de eventos  
- Atualização de eventos  
- Exclusão de eventos  
- Rotas protegidas com JWT  
- Interface web integrada  
- Integração com MongoDB  
-
----
-
-#  Como executar o projeto
-
-## 1. Clonar o repositório
+## 1. Clonar o Repositório
 
 ```bash
 git clone https://github.com/joao-cunha150/api-eventos.git
 ```
 
----
-
-## 2. Entrar na pasta
+## 2. Entrar na Pasta
 
 ```bash
 cd api-eventos
 ```
 
----
-
-## 3. Instalar dependências
+## 3. Instalar Dependências
 
 ```bash
 npm install
 ```
 
----
+## 4. Configurar Variáveis de Ambiente
 
-## 4. Criar arquivo .env
-
-Criar um arquivo `.env` na raiz do projeto contendo:
+Crie um arquivo `.env` na raiz:
 
 ```env
 PORT=3000
@@ -251,9 +157,13 @@ MONGODB_URI=mongodb://127.0.0.1:27017/eventos_db
 JWT_SECRET=sua_chave_jwt
 ```
 
----
+## 5. Executar o Projeto
 
-## 5. Executar servidor
+```bash
+npm run dev
+```
+
+ou
 
 ```bash
 node server.js
@@ -261,75 +171,61 @@ node server.js
 
 ---
 
-## 6. Abrir no navegador
+# Documentação Swagger
+
+Após iniciar o servidor, a documentação da API estará disponível em:
 
 ```text
-http://localhost:3000
+http://localhost:3000/api-docs
 ```
 
----
+Através do Swagger é possível:
 
-#  Endpoints da API
-
-# Autenticação
-
-## Registrar usuário
-
-### POST `/api/auth/register`
-
-```json
-{
-  "name": "João",
-  "email": "joao@email.com",
-  "password": "123456"
-}
-```
+* Visualizar todos os endpoints da API
+* Consultar parâmetros e corpos de requisição
+* Ver códigos de resposta
+* Testar requisições diretamente pelo navegador utilizando o botão "Try it out"
 
 ---
 
-## Login
+# Endpoints da API
 
-### POST `/api/auth/login`
+## Autenticação
 
-```json
-{
-  "email": "joao@email.com",
-  "password": "123456"
-}
-```
+### POST /api/auth/register
 
----
+Cadastro de usuários.
 
-# Eventos
+### POST /api/auth/login
 
- Necessário token JWT.
+Autenticação e geração de token JWT.
 
 ---
 
-## Criar evento
+## Eventos
 
-### POST `/api/events`
+Rotas protegidas por autenticação.
 
----
+### GET /api/events
 
-## Listar eventos
+Lista os eventos cadastrados.
 
-### GET `/api/events`
+### POST /api/events
 
----
+Cria um novo evento.
 
-## Atualizar evento
+### PUT /api/events/{id}
 
-### PUT `/api/events/:id`
+Atualiza um evento existente.
 
----
+### DELETE /api/events/{id}
 
-## Excluir evento
-
-### DELETE `/api/events/:id`
+Remove um evento.
 
 ---
 
-#  Autor
+# Autor
 
 João Victor da Cunha Rosa
+
+Projeto desenvolvido para fins acadêmicos na disciplina de Desenvolvimento Web e APIs REST.

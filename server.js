@@ -8,6 +8,9 @@ const cors = require('cors');
 const path = require('path');
 const connectDB = require('./config/db');
 
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
+
 const authRoutes = require('./src/routes/authRoutes');
 const eventRoutes = require('./src/routes/eventRoutes');
 
@@ -19,18 +22,22 @@ connectDB();
 // Middlewares
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); // Serve arquivos estáticos (front-end)
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Rotas da API
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 
-// Rota principal para servir o index.html do front-end
+// Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Rota principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
   console.log(`✅ Servidor rodando na porta ${PORT}`);
 });
